@@ -14,6 +14,7 @@ const SideBarItem = () => {
       disablePadding
       sx={{
         overflow: "hidden",
+
         "&:hover": {
           background: "rgba(86,88,105,1)",
           borderRadius: 1,

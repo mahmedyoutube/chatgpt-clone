@@ -3,8 +3,10 @@ import AddIcon from "@mui/icons-material/Add";
 import SideBarItem from "./SideBarItem";
 
 const MuiButton = styled(Button)({
-  textAlign: "start",
+  textAlign: "left",
   textTransform: "none",
+  display: "flex",
+  justifyContent: "flex-start",
 });
 
 const LeftSideBar = () => {
@@ -27,7 +29,14 @@ const LeftSideBar = () => {
           style={{ textAlign: "left" }}
           variant="outlined"
           fullWidth
-          sx={{ mt: 0.7, py: 1 }}
+          sx={{
+            mt: 0.7,
+            py: 1.3,
+            border: "1px solid rgba(86,88,105,1)",
+            "&:hover": {
+              border: "1px solid rgba(86,88,105,1)",
+            },
+          }}
         >
           New Chat
         </MuiButton>
@@ -87,7 +96,7 @@ const LeftSideBar = () => {
         </Box>
 
         <Box sx={{ borderTop: "1px solid rgba(86,88,105,1)" }}>
-          <Box mt={0.5} mb={0.7}>
+          <Box mt={0.5} mb={0.7} sx={{ overflow: "hidden" }}>
             <SideBarItem />
           </Box>
 
