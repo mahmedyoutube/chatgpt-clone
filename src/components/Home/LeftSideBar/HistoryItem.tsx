@@ -11,7 +11,7 @@ const HistoryItem = () => {
   return (
     <ListItem
       disablePadding
-      sx={{ "&:hover": { background: "#2a2b32", borderRadius: 1 } }}
+      sx={{ "&:hover": { bgcolor: "secondary.main", borderRadius: 1 } }}
     >
       <ListItemButton sx={{ mr: 0 }}>
         <ListItemIcon sx={{ mr: 1.5, minWidth: 0 }}>
