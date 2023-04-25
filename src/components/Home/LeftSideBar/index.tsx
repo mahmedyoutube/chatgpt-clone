@@ -1,6 +1,9 @@
 import { Box, Button, styled, Grid } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import HistoryItem from "./HistoryItem";
+import PersonIcon from "@mui/icons-material/Person";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 const MuiButton = styled(Button)({
   display: "flex",
@@ -45,46 +48,10 @@ const LeftSideBar = () => {
 
         <Box sx={{ height: "100%", overflow: "scroll" }}>
           <Box pt={0.5} pb={1}>
-            <HistoryItem />
+            <HistoryItem text="text 2" selected />
           </Box>
           <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem />
+            <HistoryItem text="text 1" />
           </Box>
         </Box>
 
@@ -98,10 +65,29 @@ const LeftSideBar = () => {
           }}
         >
           <Box>
-            <HistoryItem />
+            <HistoryItem
+              text="Upgrade To Plus"
+              startIcon={<PersonIcon color="primary" />}
+              endIcon={
+                <Box
+                  sx={{
+                    background: "rgba(250,230,158,1)",
+                    fontSize: 14,
+                    p: 0.5,
+                    borderRadius: 1,
+                  }}
+                >
+                  New
+                </Box>
+              }
+            />
           </Box>
           <Box>
-            <HistoryItem />
+            <HistoryItem
+              text="Username"
+              startIcon={<AccountCircleIcon color="primary" />}
+              endIcon={<MoreHorizIcon color="primary" />}
+            />
           </Box>
         </Box>
       </Box>

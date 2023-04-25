@@ -29,7 +29,7 @@ const RightSideBar = () => {
           color="primary"
           sx={{ mt: "20vh", mb: 7 }}
         >
-          ChatGpt
+          ChatGPT
         </Typography>
       </Grid>
 

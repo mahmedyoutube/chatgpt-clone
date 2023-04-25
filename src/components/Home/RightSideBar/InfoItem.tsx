@@ -20,6 +20,7 @@ const InfoItem = ({
         display: "flex",
         justifyContent: "flex-start",
         my: 1,
+        
       }}
     >
       {text} {!removeRightArrow && "→"}
