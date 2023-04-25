@@ -20,7 +20,7 @@ const LeftSideBar = () => {
         width: 260,
         height: "100%",
         color: "white",
-        px: 0.8,
+        px: 1,
       }}
     >
       <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
