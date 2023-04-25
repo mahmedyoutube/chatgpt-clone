@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import {
+  Box,
   ListItem,
   ListItemButton,
   ListItemIcon,
@@ -55,7 +56,7 @@ const SideBarItem = ({
           }
         />
       </ListItemButton>
-      {endIcon}
+      {endIcon && <Box mr={1}>{endIcon}</Box>}
       {selected && (
         <ListItemIcon sx={{ minWidth: 0, mr: 1 }}>
           <EditIcon fontSize="small" color="primary" />
