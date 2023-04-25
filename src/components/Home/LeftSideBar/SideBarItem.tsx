@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import {
   ListItem,
   ListItemButton,
@@ -5,15 +6,27 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
-const SideBarItem = () => {
+const SideBarItem = ({
+  startIcon,
+  endIcon,
+  selected,
+  text,
+}: {
+  selected?: boolean;
+  text: string;
+  startIcon?: ReactNode;
+  endIcon?: ReactNode;
+}) => {
   return (
     <ListItem
       disablePadding
       sx={{
-        overflow: "hidden",
+        background: selected ? "rgba(86,88,105,1)" : undefined,
 
         "&:hover": {
           background: "rgba(86,88,105,1)",
@@ -22,17 +35,33 @@ const SideBarItem = () => {
       }}
     >
       <ListItemButton>
-        <ListItemIcon sx={{ minWidth: 0, mr: 1.5 }}>
-          <ChatBubbleOutlineIcon fontSize="small" color="primary" />
+        <ListItemIcon sx={{ minWidth: 0, mr: 1 }}>
+          {startIcon || (
+            <ChatBubbleOutlineIcon fontSize="small" color="primary" />
+          )}
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography sx={{ whiteSpace: "nowrap" }}>
-              some Text some Tex some Tex some Tex{" "}
+            <Typography
+              sx={{
+                whiteSpace: "nowrap",
+                fontSize: "0.875rem",
+                overflow: "hidden",
+                width: "100%",
+              }}
+            >
+              {text}
             </Typography>
           }
         />
       </ListItemButton>
+      {endIcon}
+      {selected && (
+        <ListItemIcon sx={{ minWidth: 0, mr: 1 }}>
+          <EditIcon fontSize="small" color="primary" />
+          <DeleteIcon fontSize="small" color="primary" />
+        </ListItemIcon>
+      )}
     </ListItem>
   );
 };
