@@ -9,14 +9,8 @@ const Main = () => {
         <Grid xs={2} sx={{ position: "relative" }}>
           <LeftSideBar />
         </Grid>
-        <Grid sx={{ ml: 1, width: "calc(100% - 260px)" }}>
-          <Container
-            sx={{
-              width: { md: "43rem", lg: "60rem", height: "100%" },
-            }}
-          >
-            <RightSideBar />
-          </Container>
+        <Grid sx={{ width: "calc(100% - 260px)", ml: 1 }}>
+          <RightSideBar />
         </Grid>
       </Grid>
     </Box>
