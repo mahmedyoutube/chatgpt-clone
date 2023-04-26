@@ -9,7 +9,7 @@ const RightSideBarWidthContainer = ({
   sx?: SxProps;
 }) => {
   return (
-    <Container sx={{ width: { md: "36rem", lg: "53rem" }, ...sx }}>
+    <Container sx={{ maxWidth: { md: "46rem", lg: "53rem" }, ...sx }}>
       {children}
     </Container>
   );

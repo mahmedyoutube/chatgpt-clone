@@ -17,12 +17,13 @@ const LeftSideBar = () => {
   return (
     <Box
       sx={{
-        background: "#202123d9",
-        position: "fixed",
+        background: "#202123",
+
         top: 0,
         width: 260,
         px: 0.8,
         height: "100%",
+        zIndex: 1000000,
       }}
     >
       <Box

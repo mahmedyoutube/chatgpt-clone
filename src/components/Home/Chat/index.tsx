@@ -1,21 +1,15 @@
 import { Box } from "@mui/material";
 import ChatItem from "./ChatItem";
 
-const Chat = () => {
+interface IProps {
+  inputText: string;
+}
+
+const Chat = ({ inputText }: IProps) => {
   return (
     <Box sx={{ height: "calc(100vh - 12rem)", overflow: "auto" }}>
       <Box>
-        <ChatItem
-          text=' act as a job seeker and write a proposal related to the following
-            job detail "We have been developing Stock Market Website from the
-            ground up. Looking to integrate API, Charts, Data, Login and etc. We
-            already have the design and API keys with all to request data to the
-            page. You will need to start bringing this website to life. Tech
-            stack: Next.js (React) framework and JavaScript-based frameworks are
-            perfect for building web applications that integrate with real-time
-            data API, custom chart elements, authentication, etc. And you will
-            need to work on AWS."'
-        />
+        <ChatItem text={inputText} />
       </Box>
 
       <Box sx={{ background: "rgba(86,88,105,1)" }}>
@@ -34,6 +28,8 @@ Note: Be careful while using the git reset command, as it can permanently delete
           responseIcon
         />
       </Box>
+
+      
     </Box>
   );
 };

@@ -1,4 +1,13 @@
-import { Grid, Typography, TextField, styled, Link, Box } from "@mui/material";
+import {
+  Grid,
+  Typography,
+  TextField,
+  styled,
+  Link,
+  Box,
+  Card,
+  IconButton,
+} from "@mui/material";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import InfoItem from "./InfoItem";
@@ -8,6 +17,7 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import Info from "./Info";
 import Chat from "../Chat";
 import RightSideBarWidthContainer from "./RightSideBarWidthContainer";
+import { ChangeEvent, FormEvent, useRef, useState } from "react";
 
 const StyledTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {
@@ -18,34 +28,71 @@ const StyledTextField = styled(TextField)({
 });
 
 const RightSideBar = () => {
+  const inputTextRef = useRef<HTMLTextAreaElement>();
+
+  const [showChat, setShowChat] = useState(false);
+  const [submitText, setSubmitText] = useState("");
+
+  const onSubmit = (e: FormEvent) => {
+    console.log("submit ");
+
+    const val = inputTextRef.current!.value;
+
+    if (!val.length || val.length < 5) return;
+
+    setSubmitText(val);
+    setShowChat(true);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      onSubmit(event);
+    }
+  };
+
   return (
     <Grid
       container
       flexDirection="column"
-      sx={{ height: "100vh", position: "relative" }}
+      sx={{
+        height: "100vh",
+        width: "100%",
+
+        position: "relative",
+      }}
     >
-      <Chat />
-      {/* <Grid item sx={{ mt: "20vh", mb: 7 }}>
-        <Typography
-          textAlign="center"
-          variant="h4"
-          fontWeight="bold"
-          color="primary"
-          sx={{ mt: "20vh", mb: 7 }}
-        >
-          ChatGPT
-        </Typography>
-      </Grid>
-      <RightSideBarWidthContainer>
+      {showChat ? (
+        <Chat inputText={submitText} />
+      ) : (
         <Grid
-          item
           container
-          justifyContent="space-between"
-          sx={{ height: "calc(100% - 12rem)" }}
+          flexDirection="column"
+          sx={{ mt: { md: "20vh", sm: 10 }, mb: { lg: 7 } }}
         >
-          <Info />
+          <Grid item>
+            <Typography
+              textAlign="center"
+              variant="h4"
+              fontWeight="bold"
+              color="primary"
+              sx={{ mb: { xs: 5, sm: 3, lg: 7 } }}
+            >
+              ChatGPT
+            </Typography>
+          </Grid>
+          <RightSideBarWidthContainer>
+            <Grid
+              item
+              container
+              justifyContent="space-between"
+              sx={{ height: "calc(100% - 12rem)" }}
+            >
+              <Info />
+            </Grid>
+          </RightSideBarWidthContainer>
         </Grid>
-      </RightSideBarWidthContainer> */}
+      )}
 
       <Grid
         item
@@ -60,19 +107,35 @@ const RightSideBar = () => {
           width: "100%",
           height: "12rem",
           pb: 2,
-      
         }}
       >
         <RightSideBarWidthContainer sx={{ mt: "auto" }}>
-          <StyledTextField
-            fullWidth
-            placeholder="Send a message..."
-            sx={{ mt: "auto" }}
-            InputProps={{
-              endAdornment: <SendOutlinedIcon color="primary" />,
-              style: { color: "rgba(255,255,255,1)" },
-            }}
-          />
+          <Card sx={{ background: "transparent" }}>
+            <form
+              style={{
+                display: "flex",
+                alignItems: "center",
+                background: "#40414f",
+              }}
+              onSubmit={onSubmit}
+            >
+              <StyledTextField
+                fullWidth
+                placeholder="Send a message..."
+                sx={{ mt: "auto" }}
+                inputRef={inputTextRef}
+                maxRows={4}
+                multiline
+                onKeyDown={handleKeyDown}
+                InputProps={{
+                  style: { color: "rgba(255,255,255,1)" },
+                }}
+              />
+              <IconButton onClick={onSubmit}>
+                <SendOutlinedIcon color="primary" />
+              </IconButton>
+            </form>
+          </Card>
 
           <Box sx={{ color: "hsla(0,0%,100%,.5)", fontSize: ".75rem", pt: 1 }}>
             <Link> ChatGPT Mar 23 Version</Link>. Free Research Preview. ChatGPT

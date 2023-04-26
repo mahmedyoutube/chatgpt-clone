@@ -14,13 +14,12 @@ const InfoItem = ({
         color: "primary.main",
         px: 1,
         py: 1,
-        fontSize: 14,
+        fontSize: { lg: undefined, xs: 13 },
         fontWeight: "bold",
         textTransform: "none",
         display: "flex",
         justifyContent: "flex-start",
         my: 1,
-        
       }}
     >
       {text} {!removeRightArrow && "→"}
