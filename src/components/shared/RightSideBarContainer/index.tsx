@@ -9,7 +9,7 @@ const RightSideBarContainer = ({
   children: ReactNode | ReactNode[];
 }) => {
   return (
-    <Container sx={{ width: { md: "36rem", lg: "53rem" }, ...sx }}>
+    <Container sx={{ maxWidth: { md: "41rem", lg: "53rem" }, ...sx }}>
       {children}
     </Container>
   );

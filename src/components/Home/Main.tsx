@@ -5,11 +5,11 @@ import RightSideBar from "./RightSideBar";
 const Main = () => {
   return (
     <Box>
-      <Grid container>
-        <Grid xs={2} sx={{ position: "relative" }}>
+      <Grid container sx={{ flexWrap: "nowrap" }}>
+        <Grid item sx={{ position: "relative" }}>
           <LeftSideBar />
         </Grid>
-        <Grid sx={{ width: "calc(100% - 260px)", ml: 1 }}>
+        <Grid item sx={{ width: "100%" }}>
           <RightSideBar />
         </Grid>
       </Grid>

@@ -16,7 +16,6 @@ const LeftSideBar = () => {
   return (
     <Box
       sx={{
-        position: "fixed",
         top: 0,
         background: "rgba(32,33,35,1)",
         left: 0,
