@@ -2,12 +2,6 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 require("dotenv").config();
 
-admin.initializeApp();
-
-const db = admin.firestore();
-
-const collectionList = { histories: "histories" };
-
 let api;
 
 (async () => {
@@ -17,107 +11,124 @@ let api;
   });
 })();
 
-const logs = (text) => {
-  functions.logger.info(text, {
-    structuredData: true,
-  });
+admin.initializeApp();
+const db = admin.firestore();
+
+const collectionTypes = { histories: "histories" };
+
+const generateChatGPTResponse = async (prompt, parentMessageId) => {
+  // you can watch video 4 optional where I used my own chatgpt library instead of openAi library
+  // you can also use openai library
+  const res = await api.sendMessage(prompt, { parentMessageId });
+  return { text: res.text, id: res.id };
 };
 
-const callChatGPTApi = async (prompt, parentMessageId) => {
-  const res = await api.sendMessage(prompt, { parentMessageId });
+const getDocRef = async (id) => {
+  const docRef = db.collection(collectionTypes.histories).doc(id);
 
-  return { text: res.text, id: res.id };
+  return docRef;
 };
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
-
-// previous context will not pass to new chat, if you want you can consult to google, or you can work with chatgpt npm library
+//
 exports.generateText = functions.https.onRequest(async (request, response) => {
-  //functions.logger.info("Hello logs!", { structuredData: true });
+  // functions.logger.info("Hello logs!", { structuredData: true });
+
+  if (request.method === "DELETE") {
+    const { id } = request.query;
+
+    if (!id) {
+      return response.status(400).send({ message: "'id' is required" });
+    }
+
+    const docRef = await getDocRef(id);
+
+    try {
+      await docRef.delete();
+      return response.send({ message: "record is deleted successfully" });
+    } catch (err) {
+      console.log("err ", err);
+      response.status(500).send({ err: "Internal error." });
+    }
+  }
 
   if (request.method !== "POST") {
     return response
       .status(400)
-      .send({ message: "This method is not supported" });
+      .send({ message: "only post method is supported" });
   }
 
-  const { prompt, conversationId, previousMessageId } = request.body;
+  const {
+    prompt,
+    conversationId: defaultConversationid,
+    previousMessageId,
+  } = request.body;
 
   if (!prompt) {
     return response.status(400).send({ message: "'prompt' arg is required" });
   }
 
-  let res;
-  let id = conversationId;
-
-  let messageId;
+  let conversationId = defaultConversationid;
+  let messageId, text;
 
   try {
-    const response = await callChatGPTApi(prompt, previousMessageId);
-    id = id || response.id;
+    const response = await generateChatGPTResponse(prompt, previousMessageId);
+    conversationId = conversationId || response.id;
     messageId = response.id;
-    res = response.text;
-  } catch (error) {
-    if (error.response) {
-      return response.status(error.response.status).send(error.response.data);
-    } else {
-      return response.status(500).send(error.message);
-    }
-  }
+    text = response.text;
+  } catch (err) {}
 
-  // if id is present then user is using the same window instead of using the new window, so add multiple response in a same document
-
-  let docRef;
   let responses = [];
 
-  docRef = db.collection("histories").doc(id);
+  const docRef = await getDocRef(conversationId);
 
-  // fetch previous response
-  const doc = await docRef?.get();
-  if (doc?.exists) {
-    const data = doc.data();
-    responses = [...data?.responses, { prompt, res }];
-    await docRef?.update({ responses });
+  const doc = await docRef.get();
+  if (!doc.exists) {
+    await docRef.set({ responses: [{ prompt, text }] });
   } else {
-    const responses = [{ prompt, res }];
-    await docRef?.set({ responses });
+    const data = doc.data();
+    responses = [...(data?.responses || []), { prompt, text }];
+    await docRef.update({ responses });
   }
 
   try {
-    // on first message, windowId === messageId
-    return response.send({ windowId: id, messageId: id, res });
+    return response.send({ conversationId, messageId, prompt, text });
   } catch (err) {
-    console.error("error in inserting record", err);
-    return response
-      .status(400)
-      .send({ err: "Internal error, Pleae try again later" });
+    console.log("err ", err);
+    response.status(500).send({ err: "Internal error." });
   }
 });
 
-exports.deleteWindow = functions.https.onRequest(async (request, response) => {
-  //functions.logger.info("Hello logs!", { structuredData: true });
+exports.getConversation = functions.https.onRequest(
+  async (request, response) => {
+    // functions.logger.info("Hello logs!", { structuredData: true });
 
-  if (request.method !== "DELETE") {
-    return response
-      .status(400)
-      .send({ message: "This method is not supported" });
+    if (request.method !== "GET") {
+      return response
+        .status(400)
+        .send({ message: "only post method is supported" });
+    }
+
+    const { conversationId } = request.query;
+
+    if (!conversationId) {
+      return response
+        .status(400)
+        .send({ message: "'conversationId' arg is required" });
+    }
+
+    const docRef = await getDocRef(conversationId);
+
+    const doc = await docRef.get();
+
+    const data = doc.data();
+
+    try {
+      return response.send({ responses: data?.responses || [] });
+    } catch (err) {
+      console.log("err ", err);
+      response.status(500).send({ err: "Internal error." });
+    }
   }
-
-  const { id } = request.query;
-  if (!id) {
-    return response.status(400).send({ message: "'id' arg is required" });
-  }
-
-  const docRef = db.collection(collectionList.histories).doc(id);
-
-  try {
-    await docRef.delete();
-    return response.send({ message: "Deleted successfully" });
-  } catch (err) {
-    console.error("error in inserting record", err);
-    return response
-      .status(400)
-      .send({ err: "Internal error, Pleae try again later" });
-  }
-});
+);
