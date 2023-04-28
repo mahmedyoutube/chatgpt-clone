@@ -4,6 +4,15 @@ require("dotenv").config();
 
 const { Configuration, OpenAIApi } = require("openai");
 
+let api;
+
+(async () => {
+  const { ChatGPTAPI } = await import("./libs/ChatGpt.mjs");
+  api = new ChatGPTAPI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+})();
+
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -14,31 +23,13 @@ const db = admin.firestore();
 
 const collectionTypes = { histories: "histories" };
 
-const generateChatGPTResponse = async (prompt) => {
-  const completion = await openai.createCompletion({
-    model: "text-davinci-003",
-    prompt: "Hello world",
-  });
-
-  return completion.data.choices[0].text;
-};
-
-const insertNewRecord = async (docRef, prompt, res) => {
-  const id = docRef.id;
-
-  await docRef.set({ responses: [{ prompt, res }] });
-
-  return id;
+const generateChatGPTResponse = async (prompt, parentMessageId) => {
+  const res = await api.sendMessage(prompt, { parentMessageId });
+  return { text: res.text, id: res.id };
 };
 
 const getDocRef = async (id) => {
-  let docRef;
-
-  if (id) {
-    docRef = db.collection(collectionTypes.histories).doc(id);
-  } else {
-    docRef = db.collection(collectionTypes.histories).doc();
-  }
+  const docRef = db.collection(collectionTypes.histories).doc(id);
 
   return docRef;
 };
@@ -73,34 +64,72 @@ exports.generateText = functions.https.onRequest(async (request, response) => {
       .send({ message: "only post method is supported" });
   }
 
-  const { prompt, id: defaultId } = request.body;
+  const {
+    prompt,
+    conversationId: defaultConversationid,
+    previousMessageId,
+  } = request.body;
 
   if (!prompt) {
     return response.status(400).send({ message: "'prompt' arg is required" });
   }
 
-  let id = defaultId;
-  const res = await generateChatGPTResponse(prompt);
+  let conversationId = defaultConversationid;
+  let messageId, text;
+
+  try {
+    const response = await generateChatGPTResponse(prompt, previousMessageId);
+    conversationId = conversationId || response.id;
+    messageId = response.id;
+    text = response.text;
+  } catch (err) {}
 
   let responses = [];
 
-  const docRef = await getDocRef(id);
+  const docRef = await getDocRef(conversationId);
 
-  if (id) {
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      id = await insertNewRecord(docRef, prompt, res);
-    } else {
-      const data = doc.data();
-      responses = [...(data?.responses || []), { prompt, res }];
-      await docRef.update({ responses });
-    }
+  const doc = await docRef.get();
+  if (!doc.exists) {
+    await docRef.set({ responses: [{ prompt, text }] });
   } else {
-    id = await insertNewRecord(docRef, prompt, res);
+    const data = doc.data();
+    responses = [...(data?.responses || []), { prompt, text }];
+    await docRef.update({ responses });
   }
 
   try {
-    return response.send({ recordId: id, prompt, res });
+    return response.send({ conversationId, messageId, prompt, text });
+  } catch (err) {
+    console.log("err ", err);
+    response.status(500).send({ err: "Internal error." });
+  }
+});
+
+exports.getConversation = functions.https.onRequest(async (request, response) => {
+  // functions.logger.info("Hello logs!", { structuredData: true });
+
+  if (request.method !== "GET") {
+    return response
+      .status(400)
+      .send({ message: "only post method is supported" });
+  }
+
+  const { conversationId } = request.query;
+
+  if (!conversationId) {
+    return response
+      .status(400)
+      .send({ message: "'conversationId' arg is required" });
+  }
+
+  const docRef = await getDocRef(conversationId);
+
+  const doc = await docRef.get();
+
+  const data = doc.data();
+
+  try {
+    return response.send({ responses: data?.responses || [] });
   } catch (err) {
     console.log("err ", err);
     response.status(500).send({ err: "Internal error." });
