@@ -1,42 +1,32 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-require = require("esm")(module);
 require("dotenv").config();
-
-const {
-  Configuration,
-  OpenAIApi,
-  ChatCompletionResponseMessageRoleEnum,
-} = require("openai");
 
 admin.initializeApp();
 
 const db = admin.firestore();
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
-
 const collectionList = { histories: "histories" };
 
-const callChatGPTApi = async (prompt) => {
-  const completion = await openai.createCompletion({
-    model: "text-davinci-003",
-    prompt,
-  });
+let api;
 
-  return completion.data.choices[0]?.text;
+(async () => {
+  const { ChatGPTAPI } = await import("./libs/ChatGpt.mjs");
+  api = new ChatGPTAPI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+})();
+
+const logs = (text) => {
+  functions.logger.info(text, {
+    structuredData: true,
+  });
 };
 
-const insertNewRecord = async (docRef, prompt, res) => {
-  // insert new Record
-  const id = docRef?.id;
-  const responses = [{ prompt, res }];
+const callChatGPTApi = async (prompt, parentMessageId) => {
+  const res = await api.sendMessage(prompt, { parentMessageId });
 
-  await docRef?.set({ responses });
-
-  return id;
+  return { text: res.text, id: res.id };
 };
 
 // // Create and Deploy Your First Cloud Functions
@@ -52,17 +42,22 @@ exports.generateText = functions.https.onRequest(async (request, response) => {
       .send({ message: "This method is not supported" });
   }
 
-  const { prompt, id: defaultId } = request.body;
+  const { prompt, conversationId, previousMessageId } = request.body;
 
-  let id = defaultId;
   if (!prompt) {
     return response.status(400).send({ message: "'prompt' arg is required" });
   }
 
   let res;
+  let id = conversationId;
+
+  let messageId;
 
   try {
-    res = await callChatGPTApi(prompt);
+    const response = await callChatGPTApi(prompt, previousMessageId);
+    id = id || response.id;
+    messageId = response.id;
+    res = response.text;
   } catch (error) {
     if (error.response) {
       return response.status(error.response.status).send(error.response.data);
@@ -75,28 +70,23 @@ exports.generateText = functions.https.onRequest(async (request, response) => {
 
   let docRef;
   let responses = [];
-  if (id) {
-    docRef = db.collection("histories").doc(id);
-  } else {
-    docRef = db.collection("histories").doc();
-  }
 
-  if (id) {
-    // fetch previous response
-    const doc = await docRef?.get();
-    if (doc?.exists) {
-      const data = doc.data();
-      responses = [...data?.responses, { prompt, res }];
-      await docRef?.update({ responses });
-    } else {
-      id = await insertNewRecord(docRef, prompt, res);
-    }
+  docRef = db.collection("histories").doc(id);
+
+  // fetch previous response
+  const doc = await docRef?.get();
+  if (doc?.exists) {
+    const data = doc.data();
+    responses = [...data?.responses, { prompt, res }];
+    await docRef?.update({ responses });
   } else {
-    id = await insertNewRecord(docRef, prompt, res);
+    const responses = [{ prompt, res }];
+    await docRef?.set({ responses });
   }
 
   try {
-    return response.send({ recordId: id, res });
+    // on first message, windowId === messageId
+    return response.send({ windowId: id, messageId: id, res });
   } catch (err) {
     console.error("error in inserting record", err);
     return response
