@@ -3,22 +3,23 @@ import ChatItem from "./ChatItem";
 import { IResponses } from "../globals/types";
 
 interface IProps {
-  inputText: string;
-  messages: IResponses[];
+  messages: (IResponses | string)[];
 }
 
-const Chat = ({ inputText, messages }: IProps) => {
+const Chat = ({ messages }: IProps) => {
   return (
     <Box sx={{ height: "calc(100vh - 12rem)", overflow: "auto" }}>
-      <Box>
-        <ChatItem text={inputText} />
-      </Box>
+      {messages?.map((msg) => {
+        if (typeof msg === "string") {
+          return <ChatItem key={msg} text={msg} />;
+        }
 
-      <Box sx={{ background: "rgba(86,88,105,1)" }}>
-        {messages.map((msg) => (
-          <ChatItem key={msg.messageId} text={msg.text} responseIcon />
-        ))}
-      </Box>
+        return (
+          <Box sx={{ background: "rgba(86,88,105,1)" }}>
+            <ChatItem key={msg.messageId} text={msg.text} responseIcon />
+          </Box>
+        );
+      })}
     </Box>
   );
 };

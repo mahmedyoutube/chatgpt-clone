@@ -33,35 +33,46 @@ const RightSideBar = () => {
   const inputTextRef = useRef<HTMLTextAreaElement>();
 
   const [showChat, setShowChat] = useState(false);
-  const [submitText, setSubmitText] = useState("");
   const [conversationId, setConversationId] = useState("");
-  const [messages, setMessages] = useState<IResponses[]>([]);
+  const [promptWithMsg, setPromptWithMsg] = useState<(string | IResponses)[]>(
+    []
+  );
 
   const onSubmit = async (e: FormEvent) => {
     const val = inputTextRef.current!.value;
 
-    console.log("val is ", val);
-
     if (!val.length || val.length < 5) return;
 
-    setSubmitText(val);
+    const previousMsg =
+      promptWithMsg.length > 0
+        ? (promptWithMsg[promptWithMsg.length - 1] as IResponses)
+        : undefined;
+
+    inputTextRef.current!.value = "";
+
+    const promptWithMsgObj = [...promptWithMsg, val];
+
+    setPromptWithMsg(promptWithMsgObj);
     setShowChat(true);
 
     // call your api here
 
     try {
       const res = await chatApi({
-        previousMessageId: messages.length > 0 
-          ? messages[messages.length - 1].messageId
-          : "",
+        previousMessageId: previousMsg ? previousMsg.messageId : "",
         conversationId,
         prompt: val,
       });
 
-      const { conversationId: apiPrevConversationId, responses } = res;
+      const {
+        conversationId: apiPrevConversationId,
+        messageId,
+        prompt,
+        text,
+      } = res;
 
       setConversationId(apiPrevConversationId);
-      setMessages(responses);
+      setPromptWithMsg([...promptWithMsgObj, { messageId, prompt, text }]);
     } catch (err) {
       console.log("err in calling the api", err);
     }
@@ -86,7 +97,7 @@ const RightSideBar = () => {
       }}
     >
       {showChat ? (
-        <Chat inputText={submitText} messages={messages} />
+        <Chat messages={promptWithMsg} />
       ) : (
         <Grid
           container

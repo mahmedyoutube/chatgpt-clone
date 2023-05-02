@@ -21,15 +21,15 @@ const ChatItem = ({
 }) => {
   return (
     <RightSideBarWidthContainer>
-      <Grid container sx={{ p: 2.5 }}>
-        <Grid item xs={0.7}>
+      <Grid container sx={{ p: 2.5 }} alignItems="flex-start">
+        <Grid item xs={0.7} sx={{ mr: 1.5 }}>
           {responseIcon ? (
-            <ChatGptIcon htmlColor="#10a37f" />
+            <ChatGptIcon htmlColor="#10a37f" fontSize="large" />
           ) : (
-            <AccountCircleIcon htmlColor="#10a37f" />
+            <AccountCircleIcon htmlColor="#10a37f" fontSize="large" />
           )}
         </Grid>
-        <Grid item xs={11}>
+        <Grid item xs={11} sx={{ alignSelf: "center" }}>
           <Typography
             color="primary"
             sx={{
