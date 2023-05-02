@@ -1,6 +1,7 @@
 import { Grid, Box, Container } from "@mui/material";
 import LeftSideBar from "./LeftSideBar";
 import RightSideBar from "./RightSideBar";
+import { useParams } from "react-router-dom";
 
 const Main = () => {
   return (

@@ -17,9 +17,17 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import Info from "./Info";
 import Chat from "../Chat";
 import RightSideBarWidthContainer from "./RightSideBarWidthContainer";
-import { ChangeEvent, FormEvent, useRef, useState } from "react";
-import { chatApi } from "../../../utils/api";
+import {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { chatApi, getConversationById } from "../../../utils/api";
 import { IResponses } from "../globals/types";
+import { useParams } from "react-router-dom";
 
 const StyledTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {
@@ -31,6 +39,8 @@ const StyledTextField = styled(TextField)({
 
 const RightSideBar = () => {
   const inputTextRef = useRef<HTMLTextAreaElement>();
+
+  const { conversationId: selectedConversationId } = useParams();
 
   const [showChat, setShowChat] = useState(false);
   const [conversationId, setConversationId] = useState("");
@@ -72,7 +82,7 @@ const RightSideBar = () => {
       } = res;
 
       setConversationId(apiPrevConversationId);
-      setPromptWithMsg([...promptWithMsgObj, { messageId, prompt, text }]);
+      setPromptWithMsg([...promptWithMsg, { messageId, prompt, text }]);
     } catch (err) {
       console.log("err in calling the api", err);
     }
@@ -85,6 +95,19 @@ const RightSideBar = () => {
     }
   };
 
+  const loadPrevConversation = useCallback(async () => {
+    if (!selectedConversationId) return;
+
+    try {
+      const res = await getConversationById(selectedConversationId);
+      setPromptWithMsg(res.responses);
+    } catch (err) {}
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    loadPrevConversation();
+  }, [loadPrevConversation]);
+
   return (
     <Grid
       container
@@ -96,7 +119,7 @@ const RightSideBar = () => {
         position: "relative",
       }}
     >
-      {showChat ? (
+      {promptWithMsg.length > 0 ? (
         <Chat messages={promptWithMsg} />
       ) : (
         <Grid

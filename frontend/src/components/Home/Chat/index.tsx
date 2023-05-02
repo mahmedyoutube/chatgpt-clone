@@ -15,8 +15,11 @@ const Chat = ({ messages }: IProps) => {
         }
 
         return (
-          <Box sx={{ background: "rgba(86,88,105,1)" }}>
-            <ChatItem key={msg.messageId} text={msg.text} responseIcon />
+          <Box key={msg.messageId}>
+            <ChatItem text={msg.prompt} />
+            <Box sx={{ background: "rgba(86,88,105,1)" }}>
+              <ChatItem text={msg.text} responseIcon />
+            </Box>
           </Box>
         );
       })}

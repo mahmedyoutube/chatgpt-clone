@@ -4,6 +4,9 @@ import HistoryItem from "./HistoryItem";
 import PersonIcon from "@mui/icons-material/Person";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { useCallback, useEffect, useState } from "react";
+import { loadAllConversation } from "../../../utils/api";
+import { useParams, useNavigate } from "react-router-dom";
 
 const MuiButton = styled(Button)({
   display: "flex",
@@ -14,15 +17,38 @@ const MuiButton = styled(Button)({
 });
 
 const LeftSideBar = () => {
+  const navigate = useNavigate();
+  const [history, setHistory] = useState<{ id: string; prompt: string }[]>([]);
+  const { conversationId: selectedConversationId } = useParams();
+
+  const getAllConversation = useCallback(async () => {
+    try {
+      const res = await loadAllConversation();
+      setHistory(res.history);
+    } catch (err) {}
+  }, []);
+
+  useEffect(() => {
+    getAllConversation();
+  }, [getAllConversation]);
+
+  const onClickHistoryItem = (id: string) => {
+    navigate(`/${id}`);
+  };
+
+  const mainPage = () => {
+    window.location.href = "/";
+  };
+
   return (
     <Box
       sx={{
         background: "#202123",
-
         top: 0,
         width: 260,
         px: 0.8,
-        height: "100%",
+        height: "100vh",
+        overflow: "hidden",
         zIndex: 1000000,
       }}
     >
@@ -43,17 +69,25 @@ const LeftSideBar = () => {
             mt: 0.7,
             "&:hover": { border: "1px solid hsla(0,0%,100%,.2)" },
           }}
+          onClick={mainPage}
         >
           New chat
         </MuiButton>
 
-        <Box sx={{ height: "100%", overflow: "scroll" }}>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem text="text 2" selected />
-          </Box>
-          <Box pt={0.5} pb={1}>
-            <HistoryItem text="text 1" />
-          </Box>
+        <Box sx={{ height: "calc(100% - 100px)", overflow: "scroll" }}>
+          {history.map((h) => (
+            <Box
+              key={h.id}
+              pt={0.5}
+              pb={1}
+              onClick={() => onClickHistoryItem(h.id)}
+            >
+              <HistoryItem
+                text={h.prompt}
+                selected={h.id === selectedConversationId}
+              />
+            </Box>
+          ))}
         </Box>
 
         <Box
