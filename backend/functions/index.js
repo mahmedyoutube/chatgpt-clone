@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const cors = require("cors")
 require("dotenv").config();
 
 let api;
@@ -35,69 +36,70 @@ const getDocRef = async (id) => {
 exports.generateText = functions.https.onRequest(async (request, response) => {
   // functions.logger.info("Hello logs!", { structuredData: true });
 
-  if (request.method === "DELETE") {
-    const { id } = request.query;
+    if (request.method === "DELETE") {
+      const { id } = request.query;
 
-    if (!id) {
-      return response.status(400).send({ message: "'id' is required" });
+      if (!id) {
+        return response.status(400).send({ message: "'id' is required" });
+      }
+
+      const docRef = await getDocRef(id);
+
+      try {
+        await docRef.delete();
+        return response.send({ message: "record is deleted successfully" });
+      } catch (err) {
+        console.log("err ", err);
+        response.status(500).send({ err: "Internal error." });
+      }
     }
 
-    const docRef = await getDocRef(id);
+    if (request.method !== "POST") {
+      return response
+        .status(400)
+        .send({ message: "only post method is supported" });
+    }
+
+    const {
+      prompt,
+      conversationId: defaultConversationid,
+      previousMessageId,
+    } = request.body;
+
+    if (!prompt) {
+      return response.status(400).send({ message: "'prompt' arg is required" });
+    }
+
+    let conversationId = defaultConversationid;
+    let messageId, text;
 
     try {
-      await docRef.delete();
-      return response.send({ message: "record is deleted successfully" });
+      const response = await generateChatGPTResponse(prompt, previousMessageId);
+      conversationId = conversationId || response.id;
+      messageId = response.id;
+      text = response.text;
+    } catch (err) {}
+
+    let responses = [];
+
+    const docRef = await getDocRef(conversationId);
+
+    const doc = await docRef.get();
+    if (!doc.exists) {
+responses = [{ prompt, text, messageId }];
+      await docRef.set({ responses:  });
+    } else {
+      const data = doc.data();
+      responses = [...(data?.responses || []), { prompt, text, messageId }];
+      await docRef.update({ responses });
+    }
+
+    try {
+      return response.send({ responses, conversationId });
     } catch (err) {
       console.log("err ", err);
       response.status(500).send({ err: "Internal error." });
     }
-  }
-
-  if (request.method !== "POST") {
-    return response
-      .status(400)
-      .send({ message: "only post method is supported" });
-  }
-
-  const {
-    prompt,
-    conversationId: defaultConversationid,
-    previousMessageId,
-  } = request.body;
-
-  if (!prompt) {
-    return response.status(400).send({ message: "'prompt' arg is required" });
-  }
-
-  let conversationId = defaultConversationid;
-  let messageId, text;
-
-  try {
-    const response = await generateChatGPTResponse(prompt, previousMessageId);
-    conversationId = conversationId || response.id;
-    messageId = response.id;
-    text = response.text;
-  } catch (err) {}
-
-  let responses = [];
-
-  const docRef = await getDocRef(conversationId);
-
-  const doc = await docRef.get();
-  if (!doc.exists) {
-    await docRef.set({ responses: [{ prompt, text }] });
-  } else {
-    const data = doc.data();
-    responses = [...(data?.responses || []), { prompt, text }];
-    await docRef.update({ responses });
-  }
-
-  try {
-    return response.send({ conversationId, messageId, prompt, text });
-  } catch (err) {
-    console.log("err ", err);
-    response.status(500).send({ err: "Internal error." });
-  }
 });
 
 exports.getConversation = functions.https.onRequest(

@@ -18,6 +18,8 @@ import Info from "./Info";
 import Chat from "../Chat";
 import RightSideBarWidthContainer from "./RightSideBarWidthContainer";
 import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import { chatApi } from "../../../utils/api";
+import { IResponses } from "../globals/types";
 
 const StyledTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {
@@ -32,16 +34,37 @@ const RightSideBar = () => {
 
   const [showChat, setShowChat] = useState(false);
   const [submitText, setSubmitText] = useState("");
+  const [conversationId, setConversationId] = useState("");
+  const [messages, setMessages] = useState<IResponses[]>([]);
 
-  const onSubmit = (e: FormEvent) => {
-    console.log("submit ");
-
+  const onSubmit = async (e: FormEvent) => {
     const val = inputTextRef.current!.value;
+
+    console.log("val is ", val);
 
     if (!val.length || val.length < 5) return;
 
     setSubmitText(val);
     setShowChat(true);
+
+    // call your api here
+
+    try {
+      const res = await chatApi({
+        previousMessageId: messages.length > 0 
+          ? messages[messages.length - 1].messageId
+          : "",
+        conversationId,
+        prompt: val,
+      });
+
+      const { conversationId: apiPrevConversationId, responses } = res;
+
+      setConversationId(apiPrevConversationId);
+      setMessages(responses);
+    } catch (err) {
+      console.log("err in calling the api", err);
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -63,7 +86,7 @@ const RightSideBar = () => {
       }}
     >
       {showChat ? (
-        <Chat inputText={submitText} />
+        <Chat inputText={submitText} messages={messages} />
       ) : (
         <Grid
           container
